@@ -7,152 +7,123 @@
 
 <style>
 :root {
-  --bg: #f8fafc;
+  --bg: #f4f6fb;
   --card: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  /* Modern Gradient Colors */
-  --orders: #6366f1;
+  --text: #1e293b;
+  --orders: #4f46e5;
   --sessions: #0ea5e9;
-  --calls: #f59e0b;
-  --opc: #10b981;
+  --calls: #f97316;
+  --opc: #16a34a;
 }
 
 body {
   margin: 0;
-  padding: 40px 20px;
-  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  padding: 24px;
+  font-family: "Segoe UI", system-ui, sans-serif;
   background: var(--bg);
-  color: var(--text-main);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  color: var(--text);
 }
 
-.dashboard-container {
-  width: 100%;
-  max-width: 1100px;
-}
-
-h1 { font-size: 26px; font-weight: 800; margin-bottom: 24px; text-align: left; }
+h1 { font-size: 22px; margin-bottom: 16px; }
 
 .controls {
   background: var(--card);
-  padding: 20px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: 12px;
   display: flex;
-  gap: 20px;
+  gap: 16px;
   align-items: center;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-  margin-bottom: 24px;
 }
 
-.field { display: flex; flex-direction: column; gap: 6px; }
-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-
-select {
-  padding: 10px 16px;
+select, button {
+  padding: 8px 14px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  font-size: 14px;
-  cursor: pointer;
 }
 
 button {
   background: var(--orders);
   color: #fff;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 18px;
-  transition: opacity 0.2s;
 }
-
-button:hover { opacity: 0.9; }
 
 .legend {
   display: flex;
-  gap: 24px;
-  margin-bottom: 16px;
-  padding: 12px 24px;
-  background: #fff;
-  border-radius: 100px;
-  width: fit-content;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  gap: 16px;
+  margin: 12px 0;
 }
 
-.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
-.legend-box { width: 10px; height: 10px; border-radius: 50%; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.legend-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
 
 .card {
   background: var(--card);
-  border-radius: 20px;
-  padding: 30px;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05);
-  position: relative;
+  border-radius: 14px;
+  padding: 20px;
 }
 
-.scroll { overflow-x: auto; margin-top: 20px; }
+.scroll { overflow-x: auto; }
 
 .tooltip {
   position: fixed;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(4px);
+  background: rgba(15,23,42,0.95);
   color: #fff;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 13px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
   display: none;
   pointer-events: none;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
-  z-index: 100;
 }
 </style>
 </head>
 
 <body>
 
-<div class="dashboard-container">
-  <h1>📊 Aggregated Performance Analytics</h1>
+<h1>📊 Entity-Level Aggregated Analytics</h1>
 
-  <div class="controls">
-    <div class="field">
-      <label>Data View</label>
-      <select id="view">
-        <option>Orders</option>
-        <option>Sessions</option>
-        <option>Calls</option>
-      </select>
-    </div>
+<div class="controls">
+  <label>View</label>
+  <select id="view">
+    <option>Orders</option>
+    <option>Sessions</option>
+    <option>Calls</option>
+  </select>
 
-    <div class="field">
-      <label>Granularity</label>
-      <select id="granularity">
-        <option>Daily</option>
-        <option>Weekly</option>
-        <option>Monthly</option>
-      </select>
-    </div>
+  <label>Granularity</label>
+  <select id="granularity">
+    <option>Daily</option>
+    <option>Weekly</option>
+    <option>Monthly</option>
+  </select>
 
-    <button onclick="updateGraph()">Apply Settings</button>
+  <button onclick="updateGraph()">Apply</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-box" style="background:var(--orders)"></span>Orders</div>
+  <div class="legend-item"><span class="legend-box" style="background:var(--sessions)"></span>Sessions</div>
+  <div class="legend-item"><span class="legend-box" style="background:var(--calls)"></span>Calls</div>
+  <div class="legend-item"><span class="legend-box" style="background:var(--opc)"></span>Orders / Call</div>
+</div>
+
+<div class="card">
+  <h3>Task 1 & Task 3 – Combined Visualization</h3>
+  <div class="scroll">
+    <canvas id="chart" height="360"></canvas>
   </div>
-
-  <div class="legend">
-    <div class="legend-item"><span class="legend-box" style="background:var(--orders)"></span>Orders</div>
-    <div class="legend-item"><span class="legend-box" style="background:var(--sessions)"></span>Sessions</div>
-    <div class="legend-item"><span class="legend-box" style="background:var(--calls)"></span>Calls</div>
-    <div class="legend-item"><span class="legend-box" style="background:var(--opc)"></span>Orders / Call (×10)</div>
-  </div>
-
-  <div class="card">
-    <h3 style="margin: 0; font-size: 18px; color: var(--text-muted);">Event Distribution Over Time</h3>
-    <div class="scroll">
-      <canvas id="chart" height="420"></canvas>
-    </div>
-  </div>
+  <small>Note: Orders/Call is scaled ×10 for visibility</small>
 </div>
 
 <div id="tooltip" class="tooltip"></div>
@@ -173,129 +144,96 @@ async function updateGraph() {
   ]);
 
   const map = {};
-  orders.forEach(d => { map[d.time] = map[d.time] || { time: d.time }; map[d.time].orders = d.totalEvents; });
-  sessions.forEach(d => { map[d.time] = map[d.time] || { time: d.time }; map[d.time].sessions = d.totalEvents; });
-  calls.forEach(d => { map[d.time] = map[d.time] || { time: d.time }; map[d.time].calls = d.totalEvents; });
-  opc.forEach(d => { map[d.time] = map[d.time] || { time: d.time }; map[d.time].opc = d.ordersPerCall; });
+
+  orders.forEach(d => {
+    map[d.time] = map[d.time] || { time: d.time };
+    map[d.time].orders = d.totalEvents;
+  });
+
+  sessions.forEach(d => {
+    map[d.time] = map[d.time] || { time: d.time };
+    map[d.time].sessions = d.totalEvents;
+  });
+
+  calls.forEach(d => {
+    map[d.time] = map[d.time] || { time: d.time };
+    map[d.time].calls = d.totalEvents;
+  });
+
+  opc.forEach(d => {
+    map[d.time] = map[d.time] || { time: d.time };
+    map[d.time].opc = d.ordersPerCall;
+  });
 
   drawChart(Object.values(map));
 }
 
 function drawChart(data) {
   bars = [];
-  canvas.width = Math.max(1000, data.length * 130 + 100);
+  canvas.width = Math.max(1000, data.length * 120);
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  const padL = 80, padB = 80, padT = 50;
-  const bw = 16, gap = 4;
+  const padL = 60, padB = 70, padT = 30;
+  const bw = 14, gap = 6;
 
   const max = Math.max(...data.map(d =>
     Math.max(d.orders||0, d.sessions||0, d.calls||0, (d.opc||0)*10)
-  ), 10);
+  ),1);
 
-  const chartH = canvas.height - padT - padB;
-  const scale = chartH / (max * 1.1);
+  const scale = (canvas.height - padT - padB) / max;
 
-  // DRAW GRID LINES & Y-AXIS LABELS
-  ctx.textAlign = "right";
-  ctx.font = "12px sans-serif";
-  ctx.fillStyle = "#94a3b8";
-  ctx.strokeStyle = "#f1f5f9";
-  
-  for(let i=0; i<=5; i++) {
-    const val = Math.round((max/5)*i);
-    const y = canvas.height - padB - (val * scale);
-    ctx.beginPath();
-    ctx.moveTo(padL, y);
-    ctx.lineTo(canvas.width, y);
-    ctx.stroke();
-    ctx.fillText(val, padL - 15, y + 4);
-  }
-
-  // AXIS TITLES
-  ctx.save();
-  ctx.translate(25, canvas.height/2);
-  ctx.rotate(-Math.PI/2);
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#64748b";
-  ctx.font = "bold 12px sans-serif";
-  ctx.fillText("VOLUME / COUNT", 0, 0);
-  ctx.restore();
-
-  ctx.fillText("TIME PERIOD", canvas.width/2, canvas.height - 10);
-
-  // DRAW AXES
-  ctx.strokeStyle = "#e2e8f0";
-  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(padL, padT);
-  ctx.lineTo(padL, canvas.height - padB);
-  ctx.lineTo(canvas.width - 20, canvas.height - padB);
+  ctx.moveTo(padL,padT);
+  ctx.lineTo(padL,canvas.height-padB);
+  ctx.lineTo(canvas.width-20,canvas.height-padB);
   ctx.stroke();
 
-  data.forEach((d, i) => {
-    const groupX = padL + 40 + i * (bw * 4 + gap * 12);
+  data.forEach((d,i)=>{
+    const x = padL + i*(bw*4 + gap*6);
+    drawBar(x, d.orders, "--orders", d);
+    drawBar(x+bw+gap, d.sessions, "--sessions", d);
+    drawBar(x+(bw+gap)*2, d.calls, "--calls", d);
+    drawBar(x+(bw+gap)*3, (d.opc||0)*10, "--opc", d);
 
-    drawBar(groupX, d.orders, "var(--orders)", d, "Orders");
-    drawBar(groupX + bw + gap, d.sessions, "var(--sessions)", d, "Sessions");
-    drawBar(groupX + (bw + gap) * 2, d.calls, "var(--calls)", d, "Calls");
-    drawBar(groupX + (bw + gap) * 3, (d.opc || 0) * 10, "var(--opc)", d, "Orders/Call");
-
-    // X LABEL
     ctx.save();
-    ctx.translate(groupX + 30, canvas.height - padB + 20);
-    ctx.rotate(-Math.PI / 4);
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#475569";
-    ctx.font = "500 11px sans-serif";
-    ctx.fillText(d.time, 0, 0);
+    ctx.translate(x+10, canvas.height-padB+14);
+    ctx.rotate(-Math.PI/4);
+    ctx.fillText(d.time,0,0);
     ctx.restore();
   });
 
-  function drawBar(x, val, colorVar, data, type) {
-    if (!val) return;
-    const h = val * scale;
-    const y = canvas.height - padB - h;
-    
-    // Bar Styling
-    const color = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim();
-    const grad = ctx.createLinearGradient(0, y, 0, y + h);
-    grad.addColorStop(0, color);
-    grad.addColorStop(1, color + 'CC'); // Slight transparency at bottom
-    
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.roundRect(x, y, bw, h, [4, 4, 0, 0]); // Rounded top
-    ctx.fill();
-    
-    bars.push({ x, y, w: bw, h, val, data, type, color });
+  function drawBar(x,val,colorVar,data){
+    if(!val) return;
+    const h = val*scale;
+    const y = canvas.height-padB-h;
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(colorVar);
+    ctx.fillRect(x,y,bw,h);
+    bars.push({x,y,w:bw,h,val,data});
   }
 }
 
-document.addEventListener("mousemove", e => {
-  const t = document.getElementById("tooltip");
-  const r = canvas.getBoundingClientRect();
-  const mx = e.clientX - r.left, my = e.clientY - r.top;
-  let hit = false;
+document.addEventListener("mousemove",e=>{
+  const t=document.getElementById("tooltip");
+  const r=canvas.getBoundingClientRect();
+  const mx=e.clientX-r.left,my=e.clientY-r.top;
+  let hit=false;
 
-  bars.forEach(b => {
-    if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
-      hit = true;
-      t.style.display = "block";
-      t.style.left = e.pageX + 15 + "px";
-      t.style.top = e.pageY + 15 + "px";
-      t.innerHTML = `
-        <div style="margin-bottom: 6px; border-bottom: 1px solid #444; padding-bottom: 4px;">
-          <b>Summary: ${b.data.time}</b>
-        </div>
-        <div style="display:flex; justify-content:space-between; gap:15px;">
-          <span style="color:${b.color}">● ${b.type}:</span>
-          <b>${b.val / (b.type === 'Orders/Call' ? 10 : 1)}</b>
-        </div>
+  bars.forEach(b=>{
+    if(mx>=b.x && mx<=b.x+b.w && my>=b.y && my<=b.y+b.h){
+      hit=true;
+      t.style.display="block";
+      t.style.left=e.pageX+12+"px";
+      t.style.top=e.pageY+12+"px";
+      t.innerHTML=`
+        <b>${b.data.time}</b><br>
+        Orders: ${b.data.orders||0}<br>
+        Sessions: ${b.data.sessions||0}<br>
+        Calls: ${b.data.calls||0}<br>
+        Orders/Call: ${b.data.opc||0}
       `;
     }
   });
-  if (!hit) t.style.display = "none";
+  if(!hit) t.style.display="none";
 });
 
 updateGraph();
