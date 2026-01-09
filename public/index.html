@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Entity-Level Aggregated Analytics</title>
+
+<style>
+:root {
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --text: #1e293b;
+  --orders: #4f46e5;
+  --sessions: #0ea5e9;
+  --calls: #f97316;
+  --opc: #16a34a;
+}
+
+body {
+  margin: 0;
+  padding: 24px;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1 { font-size: 22px; margin-bottom: 16px; }
+
+.controls {
+  background: var(--card);
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+select, button {
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+button {
+  background: var(--orders);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.legend-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.scroll { overflow-x: auto; }
+
+.tooltip {
+  position: fixed;
+  background: rgba(15,23,42,0.95);
+  color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  display: none;
+  pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📊 Entity-Level Aggregated Analytics</h1>
+
+<div class="controls">
+  <label>View</label>
+  <select id="view">
+    <option>Orders</option>
+    <option>Sessions</option>
+    <option>Calls</option>
+  </select>
+
+  <label>Granularity</label>
+  <select id="granularity">
+    <option>Daily</option>
+    <option>Weekly</option>
+    <option>Monthly</option>
+  </select>
+
+  <button onclick="updateGraph()">Apply</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-box" style="background:var(--orders)"></span>Orders</div>
+  <div class="legend-item"><span class="legend-box" style="background:var(--sessions)"></span>Sessions</div>
+  <div class="legend-item"><span class="legend-box" style="background:var(--calls)"></span>Calls</div>
+  <div class="legend-item"><span class="legend-box" style="background:var(--opc)"></span>Orders / Call</div>
+</div>
+
+<div class="card">
+  <h3>Task 1 & Task 3 – Combined Visualization</h3>
+  <div class="scroll">
+    <canvas id="chart" height="360"></canvas>
+  </div>
+  <small>Note: Orders/Call is scaled ×10 for visibility</small>
+</div>
+
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
+let bars = [];
+
+async function updateGraph() {
+  const granularity = document.getElementById("granularity").value;
+
+  const [orders, sessions, calls, opc] = await Promise.all([
+    fetch(`/api/data?view=Orders&granularity=${granularity}`).then(r=>r.json()),
+    fetch(`/api/data?view=Sessions&granularity=${granularity}`).then(r=>r.json()),
+    fetch(`/api/data?view=Calls&granularity=${granularity}`).then(r=>r.json()),
+    fetch(`/api/orders-per-call?granularity=${granularity}`).then(r=>r.json())
+  ]);
+
+  const map = {};
+
+  orders.forEach(d => {
+    map[d.time] = map[d.time] || { time: d.time };
+    map[d.time].orders = d.totalEvents;
+  });
+
+  sessions.forEach(d => {
+    map[d.time] = map[d.time] || { time: d.time };
+    map[d.time].sessions = d.totalEvents;
+  });
+
+  calls.forEach(d => {
+    map[d.time] = map[d.time] || { time: d.time };
+    map[d.time].calls = d.totalEvents;
+  });
+
+  opc.forEach(d => {
+    map[d.time] = map[d.time] || { time: d.time };
+    map[d.time].opc = d.ordersPerCall;
+  });
+
+  drawChart(Object.values(map));
+}
+
+function drawChart(data) {
+  bars = [];
+  canvas.width = Math.max(1000, data.length * 120);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const padL = 60, padB = 70, padT = 30;
+  const bw = 14, gap = 6;
+
+  const max = Math.max(...data.map(d =>
+    Math.max(d.orders||0, d.sessions||0, d.calls||0, (d.opc||0)*10)
+  ),1);
+
+  const scale = (canvas.height - padT - padB) / max;
+
+  ctx.beginPath();
+  ctx.moveTo(padL,padT);
+  ctx.lineTo(padL,canvas.height-padB);
+  ctx.lineTo(canvas.width-20,canvas.height-padB);
+  ctx.stroke();
+
+  data.forEach((d,i)=>{
+    const x = padL + i*(bw*4 + gap*6);
+    drawBar(x, d.orders, "--orders", d);
+    drawBar(x+bw+gap, d.sessions, "--sessions", d);
+    drawBar(x+(bw+gap)*2, d.calls, "--calls", d);
+    drawBar(x+(bw+gap)*3, (d.opc||0)*10, "--opc", d);
+
+    ctx.save();
+    ctx.translate(x+10, canvas.height-padB+14);
+    ctx.rotate(-Math.PI/4);
+    ctx.fillText(d.time,0,0);
+    ctx.restore();
+  });
+
+  function drawBar(x,val,colorVar,data){
+    if(!val) return;
+    const h = val*scale;
+    const y = canvas.height-padB-h;
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(colorVar);
+    ctx.fillRect(x,y,bw,h);
+    bars.push({x,y,w:bw,h,val,data});
+  }
+}
+
+document.addEventListener("mousemove",e=>{
+  const t=document.getElementById("tooltip");
+  const r=canvas.getBoundingClientRect();
+  const mx=e.clientX-r.left,my=e.clientY-r.top;
+  let hit=false;
+
+  bars.forEach(b=>{
+    if(mx>=b.x && mx<=b.x+b.w && my>=b.y && my<=b.y+b.h){
+      hit=true;
+      t.style.display="block";
+      t.style.left=e.pageX+12+"px";
+      t.style.top=e.pageY+12+"px";
+      t.innerHTML=`
+        <b>${b.data.time}</b><br>
+        Orders: ${b.data.orders||0}<br>
+        Sessions: ${b.data.sessions||0}<br>
+        Calls: ${b.data.calls||0}<br>
+        Orders/Call: ${b.data.opc||0}
+      `;
+    }
+  });
+  if(!hit) t.style.display="none";
+});
+
+updateGraph();
+</script>
+</body>
+</html>
